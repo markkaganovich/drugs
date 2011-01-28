@@ -45,35 +45,35 @@ j = 0
 while(1):
     if not lines:
         break
-    print j
-    if len(lines) <= j+1:
-        lines.extend(file.readlines(DATABYTES))
+#print j
+    
+    if len(lines) < j+1:
+        del lines
+        lines = file.readlines(DATABYTES)
+        j=0
         if len(lines) <= j+1:                                # if reading more lines does not extend LINES, done
             break
+    
     l = list(lines[j].split('\t'))
-    if 'PASS' not in l[FILTER] or len(l[ALT]) != 1 or 'MP'  in l[INFO]:
-        j=j+1
-        continue
     a=l[INFO].split(';')
-    b = filter(lambda x: 'AC' in x, a)
-    if int(b[0][b[0].index('=')+1:]) != HOMO or len(b) > 1:
-        j=j+1
-        continue
-    b = filter(lambda x: 'AN' in x, a)
-    if int(b[0][b[0].index('=')+1:]) != NUM_GENOMES *2:
+    AC = filter(lambda x: 'AC' in x, a)
+    AN = filter(lambda x: 'AN' in x, a)
+    if ('PASS' not in l[FILTER] or len(l[ALT]) != 1 or 'MP'  in l[INFO] or
+        int(AC[0][AC[0].index('=')+1:]) != HOMO or int(AN[0][AN[0].index('=')+1:]) != NUM_GENOMES*2):
         j=j+1
         continue
 
     genotype = vcf_to_geno_struct([lines[j]])
     if genotype:
         [num_genos, cell_line_ID] =num_genotypes(genotype)
-        hg18pos_start = int(l[POS])
+        
+        hg18pos = int(l[POS])
         hg18seq = str(l[REF])
         varseq = str(l[ALT])
         chr = int(l[0])
-        hg18pos_end = hg18pos_start + len(hg18seq)
+            
         if num_genos == 1:
-            barcode_snps.append([j, cell_line_ID, chr, hg18pos_start, hg18pos_end, hg18seq, varseq])
+            barcode_snps.append([j, cell_line_ID, chr, hg18pos, hg18seq, varseq])
 
     j = j+1
 #[genomic_positions, regions] = get_rid_of_redundancy(regions, genomic_positions)
