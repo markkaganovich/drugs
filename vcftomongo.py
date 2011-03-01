@@ -18,10 +18,11 @@ def createdb(filename = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.v
         for i, name in enumerate(keys):
 	    if name.startswith('NA'):
 		individuals[name] = line[i]
-		else:
-		    record[name.strip('#')] = line[i]
+	    else:
+                record[name.strip('#')] = line[i]
 	    record['individuals'] = individuals
-        db[filename.split('.')[0]].insert(record)
+        db[filename.split('.')[1]].insert(record)
+        print filename.split('.')[1]
     f.close()
 
 if __name__ == "__main__":
