@@ -2,11 +2,41 @@
 
 from pymongo import Connection 
 
-connection = Connection()
-db = connection['1000Genomes']
+def createdb(filename = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.vcf'):
+    global db
+    f = open(filename)
+    lines = f.readlines()
+    keys = []
+    for line in lines:
+        line = line.strip('\n').split('\t')
+        if line[0] == "#CHROM":
+            keys = line
+        if line[0].startswith('#'):
+            continue
+        record = {}
+	individuals ={}
+        for i, name in enumerate(keys):
+	    if name.startswith('NA'):
+		individuals[name] = line[i]
+		else:
+		    record[name.strip('#')] = line[i]
+	    record['individuals'] = individuals
+        db[filename.split('.')[0]].insert(record)
+    f.close()
 
-def createdb( file = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.vcf'):
-    f = open(file)
+if __name__ == "__main__":
+	con = Connection()
+	db = con['1000Genomes']
+	
+	print 'CEU'
+	createdb()
+	print 'CHBJPT'
+	createdb('../1000GenomesData/CHBJPT.low_coverage.2010_09.genotypes.vcf')
+	print 'YRI'
+	createdb('../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf')
+ 
+'''
+f = open(file)
     lines = f.readlines()
     for line in lines:
         line = line.strip('\n')
@@ -31,7 +61,7 @@ def createdb( file = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.vcf'
                 eval('db.SNPs'+line[0]).insert(record)
 
     f.close() 
-
+'''
 
 
 
