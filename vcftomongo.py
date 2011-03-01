@@ -14,11 +14,11 @@ def createdb(group = 'CEU', filename = '../1000GenomesData/CEU.low_coverage.2010
         if line[0].startswith('#'):
             continue
         record = {}
-	    individuals ={}
+        individuals ={}
         for i, name in enumerate(keys):
-	        if name.startswith('NA'):
-		        individuals[name] = line[i]
-	        else:
+            if name.startswith('NA'):
+                individuals[name] = line[i]
+            else:
                 record[name.strip('#')] = line[i]
 	    record['individuals'] = individuals
         db[group].insert(record)
