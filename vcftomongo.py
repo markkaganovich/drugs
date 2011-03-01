@@ -2,11 +2,11 @@
 
 from pymongo import Connection 
 
-def createdb(filename = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.vcf'):
+def createdb(group = 'CEU', filename = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.vcf'):
     global db
     f = open(filename)
-    lines = f.readlines()
     keys = []
+    lines = f.readlines()
     for line in lines:
         line = line.strip('\n').split('\t')
         if line[0] == "#CHROM":
@@ -14,15 +14,14 @@ def createdb(filename = '../1000GenomesData/CEU.low_coverage.2010_09.genotypes.v
         if line[0].startswith('#'):
             continue
         record = {}
-	individuals ={}
+	    individuals ={}
         for i, name in enumerate(keys):
-	    if name.startswith('NA'):
-		individuals[name] = line[i]
-	    else:
+	        if name.startswith('NA'):
+		        individuals[name] = line[i]
+	        else:
                 record[name.strip('#')] = line[i]
 	    record['individuals'] = individuals
-        db[filename.split('.')[1]].insert(record)
-        print filename.split('.')[1]
+        db[group].insert(record)
     f.close()
 
 if __name__ == "__main__":
@@ -32,9 +31,9 @@ if __name__ == "__main__":
 	print 'CEU'
 	createdb()
 	print 'CHBJPT'
-	createdb('../1000GenomesData/CHBJPT.low_coverage.2010_09.genotypes.vcf')
+	createdb('CHBJPT', '../1000GenomesData/CHBJPT.low_coverage.2010_09.genotypes.vcf')
 	print 'YRI'
-	createdb('../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf')
+	createdb('YRI', '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf')
  
 '''
 f = open(file)
