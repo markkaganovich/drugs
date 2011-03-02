@@ -23,7 +23,7 @@ outputfile = open('./'+population+'output', 'w')
 barcode_snps = [] 
 individuals = info.lineinfo().individuals[population]
 
-lines = file.readlines(1000000)
+lines = file.readlines()
 for line in lines:
     if line.startswith('#'):
         continue
