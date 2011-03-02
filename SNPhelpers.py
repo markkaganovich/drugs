@@ -22,11 +22,11 @@ def combinefiles(file1, file2):
 ########################################################################
 def num_genotypes(genotypes):
     num_genos = 0
-    cell_line_ID = 0
+    cell_line_ID = []
     for lcl in range(0, len(genotypes[0])):
         if 1 in genotypes[0][lcl] or -1 in genotypes[0][lcl]:
             num_genos = num_genos+1
-            cell_line_ID = lcl
+            cell_line_ID.append(lcl)
 
     return [num_genos, cell_line_ID]
 
