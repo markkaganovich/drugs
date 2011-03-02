@@ -7,9 +7,13 @@ def combinefiles(file1, file2):
     i = 0
     for line1 in lines1:
         print i
+        l1 = line1.split('\t')
         i = i+1
         for line2 in lines2:
-            continue;
+            l2 = line2.split('\t')
+            if int(l2[1]) > int(l1[1]) or (l2[1] == l1[1] and l2[2]>l1[2]):
+                break
+            
 
 #################################################################
 #
