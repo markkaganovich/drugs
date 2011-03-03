@@ -35,6 +35,7 @@ if __name__ == "__main__":
 
     trueprobes1 = []
     trueprobes2 = []
+    i = 0
     for snp in b[0]:
 	i=i+1
 	print i
