@@ -39,7 +39,8 @@ if __name__ == "__main__":
     for snp in b[0]:
 	i=i+1
 	print i
-	trueprobes1.append(padlock.Primer(snp[1],snp[2]).checktemp())
+	if Primer(snp[1],snp[2]).checktemp()
+            trueprobes1.append(snp)
 	
     file = open('./trueprobes1')
     simpejson.dump(trueprobes1, file)
