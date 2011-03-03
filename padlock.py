@@ -25,6 +25,23 @@ class Primer:
 	    return True
 	else:
 	    return False
+'''
+check if barcode set includes everything in the pool
+'''
+def checkset(barcodes):
+    import info
+    
+    pool = info.pool().YRItest
+    cells = info.lineinfo().YRIfilecells
+    set = []
+    for snp in barcodes:
+        if cells[snp[0][0]] not in set:
+            set.append(cells[snp[0][0]])
+
+    #covered = filter(lambda x:  x in set, pool)
+  
+    return set 
+	
 
 if __name__ == "__main__":
     import simplejson
