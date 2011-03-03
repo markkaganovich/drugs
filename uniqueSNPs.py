@@ -20,7 +20,9 @@ def findbarcode(population, file = '../1000GenomesData/YRI.low_coverage.2010_09.
 
 	barcode_snps1 = []
 	barcode_snps2 = [] 
-	individuals = info.lineinfo().individuals[population]
+        t = info.lineinfo()
+	individuals = t.individuals[population]
+	celllines = t.YRIfilecells
 
 	lines = file.readlines()
 	i=0
@@ -43,11 +45,9 @@ def findbarcode(population, file = '../1000GenomesData/YRI.low_coverage.2010_09.
 		varseq = str(l[ALT])
 		chr = int(l[0])
 		snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq]
-		if (num_genos == 1 and snp not in barcode_snps1 and not (l[cell_line_ID[0]] in info.lineinfo().trios[population]
-			and l[cell_line_ID[1]] in info.lineinfo().trios[population]) and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
+		if (num_genos == 1 and snp not in barcode_snps1 and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
 		    barcode_snps1.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
-		if (num_genos == 2 and snp not in barcode_snps2 and not (l[cell_line_ID[0]] in info.lineinfo().trios[population]
-			and l[cell_line_ID[1]] in info.lineinfo().trios[population]) and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
+		if (num_genos == 2 and snp not in barcode_snps2 and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
 		    barcode_snps2.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
 	file.close()
 
