@@ -26,6 +26,23 @@ class Primer:
 	else:
 	    return False
 
+if __name__ == "__main__":
+    import simplejson
+    import padlock
+    file = open('./YRIoutputUniqueSNPs')
+    b = simplejson.load(file)
+    file.close()
+
+    trueprobes1 = []
+    trueprobes2 = []
+    for snp in b[0]:
+	i=i+1
+	print i
+	trueprobes1.append(padlock.Primer(snp[1],snp[2]).checktemp())
+	
+    file = open('./trueprobes1')
+    simpejson.dump(trueprobes1, file)
+    file.close()
 
     	
 	
