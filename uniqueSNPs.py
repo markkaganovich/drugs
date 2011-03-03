@@ -11,47 +11,63 @@ import SNPhelpers
 import simplejson 
 import logging
 import info
+import os
 
-#def findbarcode(population, file, dnastretch = 300):
-population = 'YRI'
-pool = info.pool().YRItest
-POS, HOMO, REF, ALT, FILTER, INFO = 1,2,3,4,6, 7
-file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf'   
-file = open(file)
-outputfile = open('./'+population+'output', 'w')
+def findbarcode(population, file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf'):   
+	pool = info.pool().YRItest
+	POS, HOMO, REF, ALT, FILTER, INFO = 1,2,3,4,6, 7
+	file = open(file)
 
-barcode_snps = [] 
-individuals = info.lineinfo().individuals[population]
+	barcode_snps1 = []
+	barcode_snps2 = [] 
+	individuals = info.lineinfo().individuals[population]
 
-lines = file.readlines()
-for line in lines:
-    if line.startswith('#'):
-        continue
-    l = line.split('\t')
-    a=l[INFO].split(';')
-    AC = filter(lambda x: 'AC' in x, a)
-    AN = filter(lambda x: 'AN' in x, a)
-    if ('PASS' not in l[FILTER] or len(l[ALT]) != 1 or 'MP'  in l[INFO]): 
-        continue
-    genotype = SNPhelpers.vcf_to_geno_struct([line])
-    if genotype:
-        [num_genos, cell_line_ID] = SNPhelpers.num_genotypes(genotype)
-        hg18pos = int(l[POS])
-        hg18seq = str(l[REF])
-        varseq = str(l[ALT])
-        chr = int(l[0])
-        snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq]
-        if (num_genos == 2 and snp not in barcode_snps and not (l[cell_line_ID[0]] in info.lineinfo().trios[population]
-                and l[cell_line_ID[1]] in info.lineinfo().trios[population]) and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
-            barcode_snps.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
+	lines = file.readlines()
+	i=0
+	for line in lines:
+	    i=i+1
+	    print i
+	    if line.startswith('#'):
+		continue
+	    l = line.split('\t')
+	    a=l[INFO].split(';')
+	    AC = filter(lambda x: 'AC' in x, a)
+	    AN = filter(lambda x: 'AN' in x, a)
+	    if ('PASS' not in l[FILTER] or len(l[ALT]) != 1 or 'MP'  in l[INFO]): 
+		continue
+	    genotype = SNPhelpers.vcf_to_geno_struct([line])
+	    if genotype:
+		[num_genos, cell_line_ID] = SNPhelpers.num_genotypes(genotype)
+		hg18pos = int(l[POS])
+		hg18seq = str(l[REF])
+		varseq = str(l[ALT])
+		chr = int(l[0])
+		snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq]
+		if (num_genos == 1 and snp not in barcode_snps1 and not (l[cell_line_ID[0]] in info.lineinfo().trios[population]
+			and l[cell_line_ID[1]] in info.lineinfo().trios[population]) and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
+		    barcode_snps1.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
+		if (num_genos == 2 and snp not in barcode_snps2 and not (l[cell_line_ID[0]] in info.lineinfo().trios[population]
+			and l[cell_line_ID[1]] in info.lineinfo().trios[population]) and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
+		    barcode_snps2.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
+	file.close()
 
-#[genomic_positions, regions] = get_rid_of_redundancy(regions, genomic_positions)
+	return [barcode_snps1, barcode_snps2]
 
-simplejson.dump(barcode_snps, outputfile)                
-file.close()
-outputfile.close()
+if __name__ == "__main__":
+	
+	dir = '../1000GenomesData/YRI'
+	barcode1 = []
+	barcode2 = []
+	for file in os.listdir(dir):
+	    b = findbarcode('YRI', dir+'/'+file)
+	    barcode1.extend(b[0])
+	    barcode2.extend(b[1])
+	
+	outputfile = open('./YRIoutputUniqueSNPs', 'w')
+	simplejson.dump([barcode1, barcode2], outputfile)
+	outputfile.close()
 
-#return barcode_snps
+
 
 
 
