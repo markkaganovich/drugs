@@ -50,17 +50,17 @@ if __name__ == "__main__":
     b = simplejson.load(file)
     file.close()
 
-    trueprobes1 = []
+    
     trueprobes2 = []
     i = 0
-    for snp in b[0]:
+    for snp in b[1]:
 	i=i+1
 	print i
 	if Primer(snp[1],snp[2]).checktemp():
-            trueprobes1.append(snp)
+            trueprobes2.append(snp)
 	
-    file = open('./trueprobes1')
-    simpejson.dump(trueprobes1, file)
+    file = open('./trueprobes2','w')
+    simpejson.dump(trueprobes2, file)
     file.close()
 
     	
