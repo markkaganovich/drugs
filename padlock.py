@@ -18,17 +18,17 @@ class Primer:
     	self.chr = chr
         self.pos = pos    
 
-    def ligpos():
+    def ligpos(self):
         return [self.pos-30, self.pos-5]
     
-    def extpos():
+    def extpos(self):
         return [self.pos+5,self.pos+28]
 
     def checktemp(self):
         if self.pos-28 <= 1:
             return False
-        lpos = ligpos()
-        epos - extpos()
+        lpos = self.ligpos()
+        epos = self.extpos()
         tmlig = MeltingTemp.Tm_staluc(str(hg18['chr'+str(self.chr)][lpos[0]:lpos[1]]))
         tmext = MeltingTemp.Tm_staluc(str(hg18['chr'+str(self.chr)][epos[0]:epos[1]]))
         print tmlig, tmext
