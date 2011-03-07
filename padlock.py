@@ -11,20 +11,20 @@ LENGTH = 24
 class Primer:
     def __init__(self, chr, pos):
     	self.chr = chr
-	self.pos = pos    
+        self.pos = pos    
 
 
     def checktemp(self):
-	if self.pos-28 <= 1:
-	    return False
-	tmlig = MeltingTemp.Tm_staluc(str(hg18['chr'+str(self.chr)][self.pos-29:self.pos-4]))
-	tmext = MeltingTemp.Tm_staluc(str(hg18['chr'+str(self.chr)][self.pos+4:self.pos+27]))
-	print tmlig, tmext
+        if self.pos-28 <= 1:
+            return False
+        tmlig = MeltingTemp.Tm_staluc(str(hg18['chr'+str(self.chr)][self.pos-29:self.pos-4]))
+        tmext = MeltingTemp.Tm_staluc(str(hg18['chr'+str(self.chr)][self.pos+4:self.pos+27]))
+        print tmlig, tmext
 
-	if abs(tmlig - OPT_TEMP_L) <=1 and abs(tmext - OPT_TEMP_E) <= 1:
-	    return True
-	else:
-	    return False
+        if abs(tmlig - OPT_TEMP_L) <=1 and abs(tmext - OPT_TEMP_E) <= 1:
+            return True
+        else:
+            return False
 '''
 check if barcode set includes everything in the pool
 '''
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             trueprobes2.append(snp)
 	
     file = open('./trueprobes2','w')
-    simpejson.dump(trueprobes2, file)
+    simplejson.dump(trueprobes2, file)
     file.close()
 
     	
