@@ -1,7 +1,6 @@
 from pygr import *
 from Bio.SeqUtils import MeltingTemp
 from types import *
-from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbiblastnCommandline
 
@@ -48,25 +47,31 @@ class Primer:
     '''
     run local blast
     '''
-    def blastcheck(self):
-        seq = (str(hg18['chr'+str(self.chr)][self.lpos[0]:self.lpos[1]]) +
-         'NNNNNNNNNNN' + str(hg18['chr'+str(self.chr)][self.epos[0]:self.epos[1]]))
-        print seq
-        blastn_cline = NcbiblastxCommandline(query = seq, db="human_genomic", evalue=.01, outfmt=5, out="barcodeblast.xml")
-        stdout, stderr = blastn_cline()
-        handle = open("barcodeblast.xml")
-        record = NCBIXML.read(handle)
-        num_results  = len(filter(lambda x: 'GRCh37.p2' in x.title, record.alignments)) 
-        print num_results
-        if num_results == 1:
-            return True
-        else:
+def blastcheck(blastoutputfile):
+    EXPECT_THRESH = .02
+    handle = open(blastoutputfile)
+    records = list(NCBIXML.parse(handle))
+    goodprobes = []
+
+    for r in range(0,len(records)):
+        sa = 0
+        for al in records[r].alignments:
+            if 'GRCh37.p2' in al.title:
+                for hsp in al.hsps:
+                    if hsp.expect < EXPECT_THRESH:
+                        sa = sa+1
+        if sa == 2:
+            goodprobes.append(r)
+
+    return goodprobes
+            
+    num_results  = len(filter(lambda x: 'GRCh37.p2' in x.title, record.alignments)) 
+    print num_results
+    if num_results == 1:
+        return True
+    else:
             return False
-    '''       
-    def blastprint(record):
-        for alignment in record.alignments:
-            for hsp in alignments.hsps:
-    '''
+
 '''
 check if barcode set includes everything in the pool
 
@@ -146,9 +151,7 @@ if __name__ == "__main__":
                     x not in alreadyblasted and 
                     list(set(x[0]) & set(mapextend(blastset))) == []):
                 blastset.append(x)
-
-        alreadyblasted.append(blastset)
-
+        alreadyblasted.extend(blastset)
         file = open(blastsetfile,'w')
         for snp in blastset:
             file.write('>' + str(snp)+'\n')
@@ -164,6 +167,7 @@ if __name__ == "__main__":
         blastn_cline = (NcbiblastnCommandline(query = blastsetfile, 
                     db="human_genomic", evalue=.1, outfmt=5, out=blastoutput, word_size=20))
         stdout, stderr = blastn_cline()
+        alreadyfound.extend(filter(lambda x: blastset[x], blastcheck(blastoutput)))
 
 
     file = open(alreadyblastedfile,'w')
