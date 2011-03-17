@@ -120,7 +120,7 @@ if __name__ == "__main__":
     import info
     import os
     
-    file = open('./trueprobes2')
+    file = open('./trueprobes1')
     probes = simplejson.load(file)
     file.close()
     
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     simplejson.dump(alreadyblasted, file)
     file.close()
     file = open(probesetfile,'w')
-    simpejson.dump(alreadyfound, probesetfile)
+    simplejson.dump(alreadyfound, file)
     file.close()
 
 
