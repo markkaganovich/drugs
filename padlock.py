@@ -69,21 +69,31 @@ class Primer:
     '''
 '''
 check if barcode set includes everything in the pool
+
+one of the cell lines covered by probes for >1 cell line
+is assumed to be in the desired pool
+
+if we are to pool cell lines covered by the same barcode
+then there will need to an additional list of cell lines that have
+been covered by barcodes as these checks are performed
 '''
 def checkset(barcodes):
     import info
     
-    pool = info.pool().YRItest
-    cells = info.lineinfo().YRIfilecells
-    set = []
+    lines = info.lineinfo()
+    YRIpool = info.pool().YRItest
+    pool = [p for p in YRIpool if p not in lines.trios['YRI']]
+    cells = lines.YRIfilecells
+    padlockset = []
     for snp in barcodes:
-        if cells[snp[0][0]] not in set:
-            set.append(cells[snp[0][0]])
-
-    #covered = filter(lambda x:  x in set, pool)
-  
-    return set 
-	
+        c = filter(lambda x: cells[x] in pool, snp[0])
+        if c[0] not in padlockset:
+            padlockset.append(cells[c[0]])
+    
+    if len(list(set(padlockset) & set(pool))) == len(pool):
+        return True
+    else:
+        return False
 
 def mapextend(ls):
     result=[]
@@ -91,6 +101,14 @@ def mapextend(ls):
         result.extend(e[0])
     return result
 
+'''
+probeset : the probes that pass the blast test
+alreadyblasted : the probes that have already been blasted
+blastset : the current set of sequences to be blasted this round
+blastoutput : the output of the current round of blast
+
+probecandidates (trueprobes) are the inputs that pass the Tm screens
+'''
 if __name__ == "__main__":
     import simplejson
     import info
@@ -119,37 +137,38 @@ if __name__ == "__main__":
     else:
         alreadyblasted=[] 
     
-    blastset = []
+    pool = info.pool()
+    while not checkset(alreadyfound):
+        print str(len(alreadyblasted)) + '  /  ' + str(len(probes))
+        blastset = []
+        for x in probes:
+            if (list(set(x[0]) & set(mapextend(alreadyfound))) == [] and 
+                    x not in alreadyblasted and 
+                    list(set(x[0]) & set(mapextend(blastset))) == []):
+                blastset.append(x)
 
-    for x in probes:
-        if (list(set(x[0]) & set(mapextend(alreadyfound))) == [] and 
-                x not in alreadyblasted and 
-                list(set(x[0]) & set(mapextend(blastset))) == []):
-            blastset.append(x)
+        alreadyblasted.append(blastset)
 
-    alreadyblasted.append(blastset)
+        file = open(blastsetfile,'w')
+        for snp in blastset:
+            file.write('>' + str(snp)+'\n')
+            p = Primer(snp[1], snp[2])
+            seq = (str(hg18['chr'+str(p.chr)][p.lpos[0]:p.lpos[1]]) 
+            + str(hg18['chr'+str(p.chr)][p.epos[0]:p.epos[1]])) 
+            print snp[1], snp[2], seq
+            file.write(seq)
+            file.write('\n')
+        
+        file.close()
+
+        blastn_cline = (NcbiblastnCommandline(query = blastsetfile, 
+                    db="human_genomic", evalue=.1, outfmt=5, out=blastoutput, word_size=20))
+        stdout, stderr = blastn_cline()
+
+
     file = open(alreadyblastedfile,'w')
     simplejson.dump(alreadyblasted, file)
     file.close()
-
-    pool = info.pool()
-
-    file = open(blastsetfile,'w')
-    for snp in blastset:
-        file.write('>' + str(snp)+'\n')
-        p = Primer(snp[1], snp[2])
-        seq = (str(hg18['chr'+str(p.chr)][p.lpos[0]:p.lpos[1]]) 
-        + str(hg18['chr'+str(p.chr)][p.epos[0]:p.epos[1]])) 
-        print snp[1], snp[2], seq
-        file.write(seq)
-        file.write('\n')
-    
-    file.close()
-
-    blastn_cline = NcbiblastnCommandline(query = blastsetfile, db="human_genomic", evalue=.1, outfmt=5, out=blastoutput, word_size=20)
-    stdout, stderr = blastn_cline()
-
-
 
 
 
