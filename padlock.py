@@ -3,6 +3,7 @@ from Bio.SeqUtils import MeltingTemp
 from types import *
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbiblastnCommandline
+from Bio import Seq
 
 
 hg18 = worldbase.Bio.Seq.Genome.HUMAN.hg18()
@@ -17,13 +18,18 @@ look for primers that are within 1 degree of optimal Tms
 '''
 
 class Primer:
-    def __init__(self, chr, pos):
-    	self.chr = chr
+    def __init__(self, chr, pos, cells):
+    	import info
+        linfo = info.lineinfo()
+        cell_lines = linfo.YRIfilecells
+        self.chr = chr
         self.pos = pos    
         self.lpos = self.ligpos()
         self.epos = self.extpos()
-        self.seqlig = hg18['chr'+str(self.chr)][self.lpos[0]:self.lpos[1]] 
-        self.seqext = hg18['chr'+str(self.chr)][self.epos[0]:self.epos[1]]
+        self.seqlig = str(hg18['chr'+str(self.chr)][self.lpos[0]:self.lpos[1]]) 
+        self.seqext = str(hg18['chr'+str(self.chr)][self.epos[0]:self.epos[1]])
+        self.backbone = 'AGATCGGAAGAGCGTCGCATGTTATCGAGGTC'
+        self.lines = map(lambda x: cell_lines[x], cells)
 
     def ligpos(self):
         return [self.pos-30, self.pos-5]
@@ -34,8 +40,8 @@ class Primer:
     def checktemp(self):
         if self.pos-28 <= 1:
             return False
-        tmlig = MeltingTemp.Tm_staluc(str(self.seqlig))
-        tmext = MeltingTemp.Tm_staluc(str(self.seqext))
+        tmlig = MeltingTemp.Tm_staluc(self.seqlig)
+        tmext = MeltingTemp.Tm_staluc(self.seqext)
 
         print tmlig, tmext
 
@@ -43,6 +49,24 @@ class Primer:
             return True
         else:
             return False
+
+    def checkGCcontent(self):
+        lenlig = float(len(self.seqlig))
+        lenext = float(len(self.seqext))
+        GClig = (len(filter(lambda x: x == 'G' or x == 'C' or x == 'c' or x == 'g', 
+                    self.seqlig)))
+        GCext = (len(filter(lambda x: x == 'G' or x == 'C' or x == 'c' or x == 'g', 
+                        self.seqext)))
+
+        print lenlig, lenext, GClig, GCext
+
+        if (GClig/lenlig > .3 and GClig/lenlig <.7 and GCext/lenext > .3 and
+                GCext/lenext < .7):
+            return True
+        else:
+            return False
+
+
 
 '''
  check the results of the local blast run; pick probes that have only two 
@@ -107,6 +131,36 @@ def mapextend(ls):
         result.extend(e[0])
     return result
 
+def printprobesandorderthem(probesfile, probesoutputfile):
+    import os
+    import simplejson
+    import Bio.Seq
+    import info
+
+    if probesoutputfile in os.listdir('./'):
+        print "WARNING: file exists"
+
+    file = open(probesfile)
+    probes = simplejson.load(file)
+    file.close()
+    lines = info.lineinfo()
+    YRIpool = info.pool().YRItest
+    pool = [p for p in YRIpool if p not in lines.trios['YRI']]
+
+    primers = map(lambda x: Primer(x[1], x[2], x[0]), probes)
+    file = open(probesoutputfile,'w')
+    file.write('NAME'+'\t'+ 'SEQUENCE' + '\n')
+    for p in primers:
+        print p.seqlig
+        c = filter(lambda x: x in pool, p.lines)
+        poolcell = str(c[0])
+        (file.write(poolcell[2:] + str('Pl') + str(len(p.lines)) + '\t' + 
+                    Bio.Seq.reverse_complement(p.seqlig) + p.backbone
+                    + Bio.Seq.reverse_complement(p.seqext) + '\n'))
+
+    file.close()
+    
+
 '''
 probeset : the probes that pass the blast test
 alreadyblasted : the probes that have already been blasted
@@ -156,7 +210,7 @@ if __name__ == "__main__":
         file = open(blastsetfile,'w')
         for snp in blastset:
             file.write('>' + str(snp)+'\n')
-            p = Primer(snp[1], snp[2])
+            p = Primer(snp[1], snp[2], snp[0])
             seq = (str(hg18['chr'+str(p.chr)][p.lpos[0]:p.lpos[1]]) 
             + str(hg18['chr'+str(p.chr)][p.epos[0]:p.epos[1]])) 
             print snp[1], snp[2], seq
@@ -196,7 +250,7 @@ def runalltests():
         for snp in b[j]:
             i = i+1
             print i
-            if Primer(snp[1], snp[2]).checktemp():
+            if Primer(snp[1], snp[2], snp[0]).checktemp():
                 trueprobes.append(snp)
 
         file = open('./checkedpadlocks'+str(j),'w')
