@@ -44,9 +44,10 @@ class Primer:
         else:
             return False
 
-    '''
-    run local blast
-    '''
+'''
+ check the results of the local blast run; pick probes that have only two 
+ significant matches
+'''
 def blastcheck(blastoutputfile):
     EXPECT_THRESH = .02
     handle = open(blastoutputfile)
@@ -167,11 +168,14 @@ if __name__ == "__main__":
         blastn_cline = (NcbiblastnCommandline(query = blastsetfile, 
                     db="human_genomic", evalue=.1, outfmt=5, out=blastoutput, word_size=20))
         stdout, stderr = blastn_cline()
-        alreadyfound.extend(filter(lambda x: blastset[x], blastcheck(blastoutput)))
+        alreadyfound.extend(map(lambda x: blastset[x], blastcheck(blastoutput)))
 
 
     file = open(alreadyblastedfile,'w')
     simplejson.dump(alreadyblasted, file)
+    file.close()
+    file = open(probesetfile,'w')
+    simpejson.dump(alreadyfound, probesetfile)
     file.close()
 
 
