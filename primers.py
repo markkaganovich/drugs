@@ -82,7 +82,7 @@ def helper2(chr, pos, type):
             return None
 
 
-sequence = hg18['chr1'][13104990:13105015]
+sequence = hg18['chr1'][13104990:13105070]
 from Bio.Blast import NCBIWWW
 from Bio.Blast import NCBIXML
 blast_handle = NCBIWWW.qblast('blastn','nt', sequence)
