@@ -149,12 +149,12 @@ def printprobesandorderthem(probesfile, probesoutputfile):
 
     primers = map(lambda x: Primer(x[1], x[2], x[0]), probes)
     file = open(probesoutputfile,'w')
-    file.write('NAME'+'\t'+ 'SEQUENCE' + '\n')
+    file.write('NAME'+','+ 'SEQUENCE' + '\n')
     for p in primers:
         print p.seqlig
         c = filter(lambda x: x in pool, p.lines)
         poolcell = str(c[0])
-        (file.write(poolcell[2:] + str('Pl') + str(len(p.lines)) + '\t' + 
+        (file.write(poolcell[2:] + str('Pl') + str(len(p.lines)) + ',' + 
                     Bio.Seq.reverse_complement(p.seqlig) + p.backbone
                     + Bio.Seq.reverse_complement(p.seqext) + '\n'))
 
