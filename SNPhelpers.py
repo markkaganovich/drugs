@@ -29,10 +29,9 @@ def num_genotypes(genotypes):
         if 1 in genotypes[lcl] or -1 in genotypes[lcl]:
             num_genos = num_genos+1
             lineID.append(lcl)
-    if num_genos == 1:
-        num_alleles = sum(genotypes[lineID[0]])
+    num_alleles = sum(map(lambda x: sum(genotypes[x]), lineID))
         
-    return [num_alleles, lineID]
+    return [num_genos, num_alleles, lineID]
 
 
 #---------------------------------------------------------------------
@@ -43,6 +42,7 @@ def num_genotypes(genotypes):
 #---------------------------------------------------------------------
 def vcf_to_geno_struct(lines, ignoreunphased = 0, countunphased=0):
     genotype = []
+    print lines
     for line in lines:
         tokens = line.split('\t')
         tokens = tokens[9:len(tokens)]
