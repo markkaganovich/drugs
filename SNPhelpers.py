@@ -22,13 +22,17 @@ def combinefiles(file1, file2):
 ########################################################################
 def num_genotypes(genotypes):
     num_genos = 0
-    cell_line_ID = []
-    for lcl in range(0, len(genotypes[0])):
-        if 1 in genotypes[0][lcl] or -1 in genotypes[0][lcl]:
+    lineID = []
+    num_alleles = 0
+    genotypes = genotypes[0]
+    for lcl in range(0, len(genotypes)):
+        if 1 in genotypes[lcl] or -1 in genotypes[lcl]:
             num_genos = num_genos+1
-            cell_line_ID.append(lcl)
-
-    return [num_genos, cell_line_ID]
+            lineID.append(lcl)
+    if num_genos == 1:
+        num_alleles = sum(genotypes[lineID[0]])
+        
+    return [num_alleles, lineID]
 
 
 #---------------------------------------------------------------------
@@ -54,7 +58,7 @@ def vcf_to_geno_struct(lines, ignoreunphased = 0, countunphased=0):
                    pass
                else:
                    if token[1] == '/':
-                       genotype[-1].append([-1,-1])
+                       genotype[-1].append([-1*int(token[0]), -1*int(token[2])])
                if token[1] == '\\':
                     print "\\"
                     pass
