@@ -33,20 +33,14 @@ def findbarcode(file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vc
             continue
         genotype = SNPhelpers.vcf_to_geno_struct([line])
         if genotype:
-            [num_alleles, cell_line_ID] = SNPhelpers.num_genotypes(genotype)
+            [num_genos, num_alleles, cell_line_ID] = SNPhelpers.num_genotypes(genotype)
             hg18pos = int(l[POS])
             hg18seq = str(l[REF])
             varseq = str(l[ALT])
             chr = int(l[0])
-            snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq]
-        if  (num_alleles == 1 or num_alleles == 2) and snp not in barcodesnps:
-            barcodesnps.append([cell_line_ID[0], chr, hg18pos, hg18seq, varseq, num_alleles])
-        '''
-        if (num_alleles == 1 and snp not in barcode_snps1 and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
-            barcode_snps1.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
-        if (num_alleles == 2 and snp not in barcode_snps2 and len([j for j in cell_line_ID if individuals[j] in pool]) == 1):
-            barcode_snps2.append([cell_line_ID, chr, hg18pos, hg18seq, varseq])
-        '''
+            snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq, num_alleles]
+        if  num_genos == 1 and snp not in barcodesnps:
+            barcodesnps.append(snp)
     file.close()
 
     return barcodesnps
@@ -55,10 +49,9 @@ if __name__ == "__main__":
 	
     file = '../1000GenomesData/low_coverage.merged.vcf'
     b = findbarcode(file)
-	
-	outputfile = open(file + '.outputUniqueSNPs', 'w')
-	simplejson.dump(b, outputfile)
-	outputfile.close()
+    outputfile = open(file + '.outputUniqueSNPs', 'w')
+    simplejson.dump(b, outputfile)
+    outputfile.close()
 
 
 
