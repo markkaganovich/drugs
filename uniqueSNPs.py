@@ -58,11 +58,10 @@ def findbarcode(population, file = '../1000GenomesData/YRI.low_coverage.2010_09.
 
 if __name__ == "__main__":
 	
-	dir = '../1000GenomesData/YRI'
-	for file in os.listdir(dir):
-	    b = findbarcode('YRI', dir+'/'+file)
+    file = '../1000GenomesData/low_coverage.merged.vcf'
+    b = findbarcode(file)
 	
-	outputfile = open('./YRIoutputUniqueSNPs', 'w')
+	outputfile = open(file + '.outputUniqueSNPs', 'w')
 	simplejson.dump(b, outputfile)
 	outputfile.close()
 
