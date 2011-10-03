@@ -13,16 +13,11 @@ import logging
 import info
 import os
 
-def findbarcode(population, file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf'):   
-    pool = info.pool().YRItest
+def findbarcode(file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vcf'):   
+#pool = info.pool().YRItest
     POS, HOMO, REF, ALT, FILTER, INFO = 1,2,3,4,6, 7
     file = open(file)
-    barcode_snps1 = []
-    barcode_snps2 = []
     barcodesnps = []
-    t = info.lineinfo()
-    individuals = t.individuals[population]
-    celllines = t.YRIfilecells
     lines = file.readlines()
     i = 0
     for line in lines:
