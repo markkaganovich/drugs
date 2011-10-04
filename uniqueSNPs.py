@@ -18,29 +18,31 @@ def findbarcode(file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vc
     POS, HOMO, REF, ALT, FILTER, INFO = 1,2,3,4,6, 7
     file = open(file)
     barcodesnps = []
-    lines = file.readlines()
-    i = 0
-    for line in lines:
-        i=i+1
-        print i
-        if line.startswith('#'):
-            continue
-        l = line.split('\t')
-        a=l[INFO].split(';')
-        AC = filter(lambda x: 'AC' in x, a)
-        AN = filter(lambda x: 'AN' in x, a)
-        if ('PASS' not in l[FILTER] or len(l[ALT]) != 1 or 'MP'  in l[INFO]): 
-            continue
-        genotype = SNPhelpers.vcf_to_geno_struct([line])
-        if genotype:
-            [num_genos, num_alleles, cell_line_ID] = SNPhelpers.num_genotypes(genotype)
-            hg18pos = int(l[POS])
-            hg18seq = str(l[REF])
-            varseq = str(l[ALT])
-            chr = int(l[0])
-            snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq, num_alleles]
-        if  num_genos == 1 and snp not in barcodesnps:
-            barcodesnps.append(snp)
+    lines = file.readlines(10000000)
+    while lines != []:
+        i = 0
+        for line in lines:
+            i=i+1
+            print i
+            if line.startswith('#'):
+                continue
+            l = line.split('\t')
+            a=l[INFO].split(';')
+            AC = filter(lambda x: 'AC' in x, a)
+            AN = filter(lambda x: 'AN' in x, a)
+            if ('PASS' not in l[FILTER] or len(l[ALT]) != 1 or 'MP'  in l[INFO]): 
+                continue
+            genotype = SNPhelpers.vcf_to_geno_struct([line])
+            if genotype:
+                [num_genos, num_alleles, cell_line_ID] = SNPhelpers.num_genotypes(genotype)
+                hg18pos = int(l[POS])
+                hg18seq = str(l[REF])
+                varseq = str(l[ALT])
+                chr = int(l[0])
+                snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq, num_alleles]
+            if  num_genos == 1 and snp not in barcodesnps:
+                barcodesnps.append(snp)
+        lines = file.readlines(10000000)
     file.close()
 
     return barcodesnps

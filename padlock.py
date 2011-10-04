@@ -296,6 +296,7 @@ def runalltests():
     b = simplejson.load(file)
     file.close()
 
+    # check temp
     for j in range(0,len(b)):
         trueprobes = []
         i = 0

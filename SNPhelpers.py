@@ -42,7 +42,6 @@ def num_genotypes(genotypes):
 #---------------------------------------------------------------------
 def vcf_to_geno_struct(lines, ignoreunphased = 0, countunphased=0):
     genotype = []
-    print lines
     for line in lines:
         tokens = line.split('\t')
         tokens = tokens[9:len(tokens)]
