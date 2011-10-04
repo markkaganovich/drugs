@@ -18,10 +18,10 @@ look for primers that are within 1 degree of optimal Tms
 '''
 
 class Primer:
-    def __init__(self, chr, pos, cells):
+    def __init__(self, chr, pos, snpline):
     	import info
-        linfo = info.lineinfo()
-        cell_lines = linfo.YRIfilecells
+        lines = info.lineinfo()
+        cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
         self.chr = chr
         self.pos = pos    
         self.lpos = self.ligpos()
@@ -29,7 +29,7 @@ class Primer:
         self.seqlig = str(hg18['chr'+str(self.chr)][self.lpos[0]:self.lpos[1]]) 
         self.seqext = str(hg18['chr'+str(self.chr)][self.epos[0]:self.epos[1]])
         self.backbone = 'AGATCGGAAGAGCGTCGCATGTTATCGAGGTC'
-        self.lines = map(lambda x: cell_lines[x], cells)
+        self.line = cells[snpline]  
 
     def ligpos(self):
         return [self.pos-30, self.pos-5]
@@ -68,34 +68,6 @@ class Primer:
 
 
 
-'''
- check the results of the local blast run; pick probes that have only two 
- significant matches
-'''
-def blastcheck(blastoutputfile):
-    EXPECT_THRESH = .02
-    handle = open(blastoutputfile)
-    records = list(NCBIXML.parse(handle))
-    goodprobes = []
-
-    for r in range(0,len(records)):
-        sa = 0
-        for al in records[r].alignments:
-            if 'GRCh37.p2' in al.title:
-                for hsp in al.hsps:
-                    if hsp.expect < EXPECT_THRESH:
-                        sa = sa+1
-        if sa == 2:
-            goodprobes.append(r)
-
-    return goodprobes
-            
-    num_results  = len(filter(lambda x: 'GRCh37.p2' in x.title, record.alignments)) 
-    print num_results
-    if num_results == 1:
-        return True
-    else:
-            return False
 
 '''
 check if barcode set includes everything in the pool
@@ -107,31 +79,6 @@ if we are to pool cell lines covered by the same barcode
 then there will need to an additional list of cell lines that have
 been covered by barcodes as these checks are performed
 '''
-def checkset(barcodes):
-    import info
-    
-    lines = info.lineinfo()
-    cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] +
-lines.individuals['YRI']
-    padlockset = {}
-    for snp in barcodes:
-        if cells[snp[0]] not in padlockset.keys():
-            padlockset[cells[snp[0]]] = 1
-        else
-        c = filter(lambda x: cells[x] in pool, snp[0])
-        if c[0] not in padlockset:
-            padlockset.append(cells[c[0]])
-    
-    if len(list(set(padlockset) & set(pool))) == len(pool):
-        return True
-    else:
-        return False
-
-def mapextend(ls):
-    result=[]
-    for e in ls:
-        result.extend(e[0])
-    return result
 
 def printprobesandorderthem(probesfile, probesoutputfile):
     import os
@@ -166,108 +113,108 @@ def printprobesandorderthem(probesfile, probesoutputfile):
 def getsnpregionseq(probe):
     return str(hg18['chr'+str(probe[1])][int(probe[2])-30 : int(probe[2])+28])
 
+''' 
+run all the tests
+'''
+def alleles(snps, numalleles):
+    newsnps = filter(lambda x: x[5] == numalleles, snps)
+    return newsnps
+
+def runTests(uniquesnps):
+    trueprobes = []
+    i = 0
+    for snp in uniquesnps:
+        i = i+1
+        print i
+        p = Primer(snp[1], snp[2], snp[0][0])
+        if p.checktemp() and p.checkGCcontent():
+            trueprobes.append(p)
+    return trueprobes
+
+def addtosetCheck(primer, padlockset):
+    if primer.line not in padlockset.keys():
+        return True
+    elif padlockset[primer.line].__len__() >= 5:
+        return False
+    else:
+        return True
+
+def blast(primer):
+    blastsetfile = './blastresults/blastset.fasta'
+    blastoutput = './blastresults/blastoutput.xml'
+    file = open(blastsetfile,'w')
+    file.write('>' + 'Chr' + str(primer.chr) + 'Pos' + str(primer.pos) + str(primer.line) +'\n')
+    seq = (str(hg18['chr'+str(primer.chr)][primer.lpos[0]:primer.lpos[1]]) 
+    + str(hg18['chr'+str(primer.chr)][primer.epos[0]:primer.epos[1]])) 
+    print primer.chr, primer.pos, seq
+    file.write(seq)
+    file.close()
+    blastn_cline = (NcbiblastnCommandline(query = blastsetfile, 
+                db="human_genomic", evalue=.1, outfmt=5, out=blastoutput, word_size=20))
+    stdout, stderr = blastn_cline()
+    if blastcheck(blastoutput):
+        return True
+    else:
+        return False
 
 '''
-probeset : the probes that pass the blast test
-alreadyblasted : the probes that have already been blasted
-blastset : the current set of sequences to be blasted this round
-blastoutput : the output of the current round of blast
-
-probecandidates (trueprobes) are the inputs that pass the Tm screens
+ check the results of the local blast run; pick probes that have only two 
+ significant matches
 '''
+def blastcheck(blastoutputfile):
+    EXPECT_THRESH = .02
+    handle = open(blastoutputfile)
+    records = list(NCBIXML.parse(handle))
+    goodprobes = []
+
+    for r in range(0,len(records)):
+        sa = 0
+        for al in records[r].alignments:
+            if 'GRCh37.p2' in al.title:
+                for hsp in al.hsps:
+                    if hsp.expect < EXPECT_THRESH:
+                        sa = sa+1
+        if sa == 2:
+            goodprobes.append(r)
+
+    return goodprobes
+            
+#num_results  = len(filter(lambda x: 'GRCh37.p2' in x.title, record.alignments)) 
+#   print num_results
+#   if num_results == 1:
+#       return True
+#   else:
+#       return False
+
+
 if __name__ == "__main__":
     import simplejson
     import info
     import os
     
-    file = open('../1000GenomesData/low_coverage.merged.vcf.uniquesnps')
+#file = open('../1000GenomesData/low_coverage.merged.vcf.uniquesnps')
+    file = open('./probes1')
     candidateloci = simplejson.load(file)
     file.close()
 
     # take only num alleles == 2
-    a = alleles(candidateloci, 2)
-    
+#a = alleles(candidateloci, 2)
+    a = candidateloci
+
     # check Tm
     primersbeforeblast = runTests(a)
-
-    
-    
-
-    probesetfile = './probes'
-    alreadyblastedfile = './blastresults/blasted'
-    blastsetfile = './blastresults/blastset.fasta'
-    blastoutput = './blastresults/blastoutput.xml'
-
-    if probesetfile in os.listdir('./'):
-        file = open(probsetfile)
-        alreadyfound = simplejson.load(file)
-        file.close()
-    else:
-        alreadyfound = []
-
-    if alreadyblastedfile in os.listdir('./blastresults'):
-        file = open(alreadyblastedfile)
-        alreadyblasted = simplejson.load(file)
-        file.close()
-    else:
-        alreadyblasted=[] 
-    
-    pool = info.pool()
-    while not checkset(alreadyfound):
-        print str(len(alreadyblasted)) + '  /  ' + str(len(probes))
-        blastset = []
-        for x in probes:
-            if (list(set(x[0]) & set(mapextend(alreadyfound))) == [] and 
-                    x not in alreadyblasted and 
-                    list(set(x[0]) & set(mapextend(blastset))) == []):
-                blastset.append(x)
-        alreadyblasted.extend(blastset)
-        file = open(blastsetfile,'w')
-        for snp in blastset:
-            file.write('>' + str(snp)+'\n')
-            p = Primer(snp[1], snp[2], snp[0])
-            seq = (str(hg18['chr'+str(p.chr)][p.lpos[0]:p.lpos[1]]) 
-            + str(hg18['chr'+str(p.chr)][p.epos[0]:p.epos[1]])) 
-            print snp[1], snp[2], seq
-            file.write(seq)
-            file.write('\n')
-        
-        file.close()
-
-        blastn_cline = (NcbiblastnCommandline(query = blastsetfile, 
-                    db="human_genomic", evalue=.1, outfmt=5, out=blastoutput, word_size=20))
-        stdout, stderr = blastn_cline()
-        alreadyfound.extend(map(lambda x: blastset[x], blastcheck(blastoutput)))
+   
+    lines = info.lineinfo()
+    cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
+    padlockset = {}
+    for p in primersbeforeblast:
+        if addtosetCheck(p, padlockset) and blast(p):
+            if p.line in padlockset.keys():
+                padlockset[p.line] = padlockset[p.line].append(p)
+            else:
+                padlockset[p.line] = [p]
 
 
-    file = open(alreadyblastedfile,'w')
-    simplejson.dump(alreadyblasted, file)
+    file = open('./padlockset','w')
+    simplejson.dump(padlockset, file)
     file.close()
-    file = open(probesetfile,'w')
-    simplejson.dump(alreadyfound, file)
-    file.close()
-
-
-
-
-''' 
-run all the tests
-'''
-def alleles(snps, numalleles):
-    newsnps = filter(lambda x: x[5] == numalleles)
-    return newsnps
-
-def runTests(uniquesnps):
-    for j in range(0,len(uniquesnps)):
-        trueprobes = []
-        i = 0
-        for snp in uniquesnps[j]:
-            i = i+1
-            print i
-            p = Primer(snp[1], snp[2], snp[0])
-            if p.checktemp() and p.checkGCcontent():
-                trueprobes.append(p)
-    return trueprobes
-
-	
-
