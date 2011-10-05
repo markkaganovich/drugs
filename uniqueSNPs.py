@@ -19,7 +19,9 @@ def findbarcode(file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vc
     file = open(file)
     barcodesnps = []
     lines = file.readlines(10000000)
+    fileindex = 0
     while lines != []:
+        fileindex = fileindex +1
         i = 0
         for line in lines:
             i=i+1
@@ -42,7 +44,10 @@ def findbarcode(file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vc
                 snp = [cell_line_ID, chr, hg18pos, hg18seq, varseq, num_alleles]
             if  num_genos == 1 and snp not in barcodesnps:
                 barcodesnps.append(snp)
-        lines = file.readlines(10000000)
+        lines = file.readlines(1000000000)
+        outputfile = open(str(fileindex)+'.outputUniqueSNPs','w')
+        simplejson.dump(barcodesnps, outputfile)
+        outputfile.close()
     file.close()
 
     return barcodesnps

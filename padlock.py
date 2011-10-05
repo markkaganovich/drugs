@@ -18,8 +18,10 @@ look for primers that are within 1 degree of optimal Tms
 '''
 
 class Primer:
-    def __init__(self, chr, pos, snpline):
+    def __init__(self, chr, pos, snpline, ref, alt):
     	import info
+        self.ref = ref
+        self.alt = alt
         lines = info.lineinfo()
         cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
         self.chr = chr
@@ -66,6 +68,12 @@ class Primer:
         else:
             return False
 
+    def checkGA(self):
+        if (self.ref == 'G' and self.alt == 'A') or (self.ref == 'A' and self.alt == 'G'):
+            return False
+        else:
+            return True
+
 def printprobesandorderthem(probesfile, probesoutputfile):
     import os
     import simplejson
@@ -84,7 +92,7 @@ def printprobesandorderthem(probesfile, probesoutputfile):
     file.write('NAME'+','+ 'SEQUENCE' + '\n')
     for pl in probeslist:
             for i,p in enumerate(pl):
-                pr = Primer(p[0], p[1], cells.index(p[2]))
+                pr = Primer(p[0], p[1], cells.index(p[2]), p[3], p[4])
                 print pr.seqlig
                 (file.write(pr.line + str(i) + ',' 
                             + Bio.Seq.reverse_complement(pr.seqlig) + pr.backbone 
@@ -109,8 +117,8 @@ def runTests(uniquesnps):
     for snp in uniquesnps:
         i = i+1
         print i
-        p = Primer(snp[1], snp[2], snp[0][0])
-        if p.checktemp() and p.checkGCcontent():
+        p = Primer(snp[1], snp[2], snp[0][0], snp[3], snp[4])
+        if p.checktemp() and p.checkGCcontent() and p.checkGA():
             trueprobes.append(p)
     return trueprobes
 
