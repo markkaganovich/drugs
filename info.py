@@ -1,8 +1,14 @@
 class lineinfo:
     def __init__(self):
-        self.trios={}
+        self.trios = {}
         self.trios['CEU'] = ['NA12878', 'NA12891', 'NA12892']
         self.trios['YRI'] = ['NA19240', 'NA19238', 'NA19239']
+        self.child = {}
+        self.child['CEU'] = 'NA12878'
+        self.child['YRI'] = 'NA19240'
+        self.parents = {}
+        self.parents['CEU'] = ['NA12891', 'NA12892']
+        self.parents['YRI'] = ['NA19238', 'NA19239']
 
         self.individuals={}
         self.individuals['CEU'] = ['NA06985', 'NA06986', 'NA06994', 'NA07000', 'NA07037', 'NA07051', 'NA07346', 'NA07347', 'NA07357', 'NA10847', 'NA10851', 'NA11829', 'NA11830', 'NA11831', 'NA11832', 'NA11840', 'NA11881', 'NA11894', 'NA11918', 'NA11919', 'NA11920', 'NA11931', 'NA11992', 'NA11993', 'NA11994', 'NA11995', 'NA12003', 'NA12004', 'NA12005', 'NA12006', 'NA12043', 'NA12044', 'NA12045', 'NA12144', 'NA12154', 'NA12155', 'NA12156', 'NA12234', 'NA12249', 'NA12287', 'NA12414', 'NA12489', 'NA12716', 'NA12717', 'NA12749', 'NA12750', 'NA12751', 'NA12760', 'NA12761', 'NA12762', 'NA12763', 'NA12776', 'NA12812', 'NA12813', 'NA12814', 'NA12815', 'NA12828', 'NA12872', 'NA12873', 'NA12874']

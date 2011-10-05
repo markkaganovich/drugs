@@ -34,6 +34,26 @@ def num_genotypes(genotypes):
     return [num_genos, num_alleles, lineID]
 
 
+def num_genotypes_trios(genotypes):
+    import info
+
+    num_genos   = []
+    num_alleles = []
+    lineID      = []
+    for geno in genotypes:
+        a = num_genotypes(geno)
+        num_genos.append(a[0])
+        num_alleles.append(a[1])
+        lineID.append(a[2])
+
+    if num_genos[0] == 2 and num_genos[1] == 2:
+        i = info.lineinfo()
+        snp1cells = map(lambda x: i.all[x], lineID[0])
+        snp2cells = map(lambda x: i.all[x], lineID[1])
+        if i.child['YRI'] in snp1cells and i.child['YRI'] in snp2cells:
+            if i.parents['YRI'][0] in snp1cells+snp2cells and i.parents['YRI'][1] in snp1cells+snp2cells:
+                return True
+    
 #---------------------------------------------------------------------
 # take vcf format LINES and output genotype struc:
 #   NA123  [0] -> [0,1], [0,0], [1,0]
