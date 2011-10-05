@@ -66,20 +66,6 @@ class Primer:
         else:
             return False
 
-
-
-
-'''
-check if barcode set includes everything in the pool
-
-one of the cell lines covered by probes for >1 cell line
-is assumed to be in the desired pool
-
-if we are to pool cell lines covered by the same barcode
-then there will need to an additional list of cell lines that have
-been covered by barcodes as these checks are performed
-'''
-
 def printprobesandorderthem(probesfile, probesoutputfile):
     import os
     import simplejson
@@ -90,22 +76,19 @@ def printprobesandorderthem(probesfile, probesoutputfile):
         print "WARNING: file exists"
 
     file = open(probesfile)
-    probes = simplejson.load(file)
+    probeslist = simplejson.load(file)
     file.close()
-    lines = info.lineinfo()
-    YRIpool = info.pool().YRItest
-    pool = [p for p in YRIpool if p not in lines.trios['YRI']]
-
-    primers = map(lambda x: Primer(x[1], x[2], x[0]), probes)
+    
+    cells = info.lineinfo().all
     file = open(probesoutputfile,'w')
     file.write('NAME'+','+ 'SEQUENCE' + '\n')
-    for p in primers:
-        print p.seqlig
-        c = filter(lambda x: x in pool, p.lines)
-        poolcell = str(c[0])
-        (file.write(poolcell[2:] + str('Pl') + str(len(p.lines)) + ',' + 
-                    Bio.Seq.reverse_complement(p.seqlig) + p.backbone
-                    + Bio.Seq.reverse_complement(p.seqext) + '\n'))
+    for pl in probeslist:
+            for i,p in enumerate(pl):
+                pr = Primer(p[0], p[1], cells.index(p[2]))
+                print pr.seqlig
+                (file.write(pr.line + str(i) + ',' 
+                            + Bio.Seq.reverse_complement(pr.seqlig) + pr.backbone 
+                            + Bio.Seq.reverse_complement(pr.seqext) + '\n'))
 
     file.close()
     
@@ -179,13 +162,6 @@ def blastcheck(blastoutputfile):
 
     return goodprobes
             
-#num_results  = len(filter(lambda x: 'GRCh37.p2' in x.title, record.alignments)) 
-#   print num_results
-#   if num_results == 1:
-#       return True
-#   else:
-#       return False
-
 
 if __name__ == "__main__":
     import simplejson
@@ -205,7 +181,8 @@ if __name__ == "__main__":
     primersbeforeblast = runTests(a)
    
     lines = info.lineinfo()
-    cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
+#cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
+    cells = lines.all
     padlockset = {}
     for p in primersbeforeblast:
         if addtosetCheck(p, padlockset) and blast(p):
@@ -216,5 +193,10 @@ if __name__ == "__main__":
 
 
     file = open('./padlockset','w')
-    simplejson.dump(padlockset, file)
+    padlocklist = []
+    for plist in padlockset:
+        padlocklist.append(map(lambda x: [x.chr, x.pos, x.line], padlockset[plist]))
+    simplejson.dump(padlocklist, file)
     file.close()
+
+    printprobesandorderthem('./padlockset','./orderpadlockset102012')
