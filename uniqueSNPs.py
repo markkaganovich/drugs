@@ -25,7 +25,8 @@ def findbarcode(file = '../1000GenomesData/YRI.low_coverage.2010_09.genotypes.vc
         i = 0
         for line in lines:
             i=i+1
-            print i
+            print file.tell()
+            print fileindex
             if line.startswith('#'):
                 continue
             l = line.split('\t')
