@@ -41,7 +41,8 @@ def num_genotypes_trios(genotypes):
     num_alleles = []
     lineID      = []
     for geno in genotypes:
-        a = num_genotypes(geno)
+        print geno
+        a = num_genotypes([geno])
         num_genos.append(a[0])
         num_alleles.append(a[1])
         lineID.append(a[2])
@@ -52,7 +53,7 @@ def num_genotypes_trios(genotypes):
         snp2cells = map(lambda x: i.all[x], lineID[1])
         if i.child['YRI'] in snp1cells and i.child['YRI'] in snp2cells:
             if i.parents['YRI'][0] in snp1cells+snp2cells and i.parents['YRI'][1] in snp1cells+snp2cells:
-                return True
+                return i.child['YRI']
     
 #---------------------------------------------------------------------
 # take vcf format LINES and output genotype struc:
@@ -62,11 +63,14 @@ def num_genotypes_trios(genotypes):
 #---------------------------------------------------------------------
 def vcf_to_geno_struct(lines, ignoreunphased = 0, countunphased=0):
     genotype = []
+    print lines
     for line in lines:
+        print line
         tokens = line.split('\t')
         tokens = tokens[9:len(tokens)]
         genotype.append([])
         for token in tokens:
+            print token
             if token == '.':
                 continue
             if token[1] == '|' or countunphased == 1:
