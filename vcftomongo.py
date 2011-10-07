@@ -6,22 +6,29 @@ def createdb(group = 'CEU', filename = '../1000GenomesData/CEU.low_coverage.2010
     global db
     f = open(filename)
     keys = []
-    lines = f.readlines()
-    for line in lines:
-        line = line.strip('\n').split('\t')
-        if line[0] == "#CHROM":
-            keys = line
-        if line[0].startswith('#'):
-            continue
-        record = {}
-        individuals ={}
-        for i, name in enumerate(keys):
-            if name.startswith('NA'):
-                individuals[name] = line[i]
-            else:
-                record[name.strip('#')] = line[i]
-	    record['individuals'] = individuals
-        db[group].insert(record)
+    lines = f.readlines(100000)
+#for line in lines:
+    while lines!=[]:
+        for j in range(0, len(lines)):
+            line = lines[j]
+            line = line.strip('\n').split('\t')
+            if line[0] == "#CHROM":
+                keys = line
+            if line[0].startswith('#'):
+                continue
+            record = {}
+            individuals ={}
+            for i, name in enumerate(keys):
+                if name.startswith('NA'):
+                    individuals[name] = line[i]
+                else:
+                    record[name.strip('#')] = line[i]
+            record['individuals'] = individuals
+            db[group].insert(record)
+            print record['POS']
+            if j+1 == len(lines):
+                j = 0
+                lines = f.readlines(100000)
     f.close()
 
 if __name__ == "__main__":

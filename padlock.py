@@ -108,7 +108,7 @@ def getsnpregionseq(probe):
 run all the tests
 '''
 def alleles(snps, numalleles):
-    newsnps = filter(lambda x: x[5] == numalleles, snps)
+    newsnps = filter(lambda x: abs(x[5]) == numalleles, snps)
     return newsnps
 
 def runTests(uniquesnps):
@@ -118,7 +118,7 @@ def runTests(uniquesnps):
         i = i+1
         print i
         p = Primer(snp[1], snp[2], snp[0][0], snp[3], snp[4])
-        if p.checktemp() and p.checkGCcontent() and p.checkGA():
+        if p.checktemp() and p.checkGCcontent():
             trueprobes.append(p)
     return trueprobes
 
@@ -170,14 +170,22 @@ def blastcheck(blastoutputfile):
 
     return goodprobes
             
+def mergepartialoutputs():
+    import simplejson
+
+    file = open('11.outputUniqueSNPs')
+    file = open('outputUniqueSNPs', 'w')
+    simplejson.dump(merged, file)
+    file.close()
+
 
 if __name__ == "__main__":
     import simplejson
     import info
     import os
     
-#file = open('../1000GenomesData/low_coverage.merged.vcf.uniquesnps')
-    file = open('./probes1')
+    file = open('./outputUniqueSNPs')
+# file = open('./probes1')
     candidateloci = simplejson.load(file)
     file.close()
 
@@ -185,11 +193,9 @@ if __name__ == "__main__":
 #a = alleles(candidateloci, 2)
     a = candidateloci
 
-    # check Tm
     primersbeforeblast = runTests(a)
    
     lines = info.lineinfo()
-#cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
     cells = lines.all
     padlockset = {}
     for p in primersbeforeblast:
@@ -199,11 +205,10 @@ if __name__ == "__main__":
             else:
                 padlockset[p.line] = [p]
 
-
     file = open('./padlockset','w')
     padlocklist = []
     for plist in padlockset:
-        padlocklist.append(map(lambda x: [x.chr, x.pos, x.line], padlockset[plist]))
+        padlocklist.extend(map(lambda x: [x.chr, x.pos, x.line], padlockset[plist]))
     simplejson.dump(padlocklist, file)
     file.close()
 
