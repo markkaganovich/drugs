@@ -74,7 +74,7 @@ def vcf_to_geno_struct(lines, ignoreunphased = 0, countunphased=0):
             print token
             if token == '.':
                 genotype[-1].append([0,0])
-            if token[1] == '|' or countunphased == 1:
+            elif token[1] == '|' or countunphased == 1:
                 if token[0] == '.' or token[2] == '.':
                     genotype[-1].append([-2,-2])
                 else:
