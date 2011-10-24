@@ -25,6 +25,7 @@ def num_genotypes(genotypes):
     lineID = []
     num_alleles = 0
     genotypes = genotypes[0]
+    print "length of genotypes:" + str(len(genotypes))
     for lcl in range(0, len(genotypes)):
         if 1 in genotypes[lcl] or -1 in genotypes[lcl]:
             num_genos = num_genos+1
@@ -65,9 +66,9 @@ def vcf_to_geno_struct(lines, ignoreunphased = 0, countunphased=0):
     genotype = []
     print lines
     for line in lines:
-        print line
         tokens = line.split('\t')
         tokens = tokens[9:len(tokens)]
+        print "len of tokens:" + str(len(tokens))
         genotype.append([])
         for token in tokens:
             print token
