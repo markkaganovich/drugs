@@ -4,8 +4,6 @@ from types import *
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio import Seq
-
-
 hg18 = worldbase.Bio.Seq.Genome.HUMAN.hg18()
 OPT_TEMP_L = 58
 OPT_TEMP_E = 53
@@ -16,7 +14,6 @@ LENGTH = 24
 11 bp gap between ligation and extension strands
 look for primers that are within 1 degree of optimal Tms
 '''
-
 class Primer:
     def __init__(self, chr, pos, snpline, ref, alt):
     	import info
@@ -118,7 +115,7 @@ def runTests(uniquesnps):
         i = i+1
         print i
         p = Primer(snp[1], snp[2], snp[0][0], snp[3], snp[4])
-        if p.checktemp() and p.checkGCcontent():
+        if p.checktemp() and p.checkGCcontent() and p.checkGA():
             trueprobes.append(p)
     return trueprobes
 
@@ -170,21 +167,14 @@ def blastcheck(blastoutputfile):
 
     return goodprobes
             
-def mergepartialoutputs():
-    import simplejson
-
-    file = open('11.outputUniqueSNPs')
-    file = open('outputUniqueSNPs', 'w')
-    simplejson.dump(merged, file)
-    file.close()
-
-
 if __name__ == "__main__":
     import simplejson
     import info
     import os
-    
-    file = open('./outputUniqueSNPs')
+    lines = info.lineinfo()
+    cells = lines.all
+     
+    file = open('./19.outputUniqueSNPs')
 # file = open('./probes1')
     candidateloci = simplejson.load(file)
     file.close()
@@ -192,16 +182,31 @@ if __name__ == "__main__":
     # take only num alleles == 2
 #a = alleles(candidateloci, 2)
     a = candidateloci
+    primersbeforeblastandtrio = runTests(a)
+    '''
+    file = open('./primersbeforeblastandtrio1026')
+    plist = simplejson.load(file)
+    file.close()
+    primersbeforeblastandtrio = []
+    for p in plist:
+        primersbeforeblastandtrio.append(Primer(p[0],p[1],cells.index(p[2]), p[3],p[4]))
+    '''
+    file  = open('../1000GenomesData/CEUtrioposint')
+    CEUtriopos = simplejson.load(file)
+    file.close()
+    file = open('../1000GenomesData/YRItrioposint')
+    YRItriopos = simplejson.load(file)
+    file.close()
+    primersbeforeblast = []
+    for p in primersbeforeblastandtrio:
+        if not p.pos in CEUtriopos and not p.pos in YRItriopos:
+            primersbeforeblast.append(p)
 
-    primersbeforeblast = runTests(a)
-   
-    lines = info.lineinfo()
-    cells = lines.all
     padlockset = {}
     for p in primersbeforeblast:
         if addtosetCheck(p, padlockset) and blast(p):
             if p.line in padlockset.keys():
-                padlockset[p.line] = padlockset[p.line].append(p)
+                padlockset[p.line].append(p)
             else:
                 padlockset[p.line] = [p]
 
