@@ -45,7 +45,6 @@ def findnumalleles(probe, genotypefile):
 
     for l in lines:
         line = l.split('\t')
-        if l.startswith('#') != True and int(line[0]) == probechr and
-int(line[1]) == probepos:
+        if l.startswith('#') != True and int(line[0]) == probechr and int(line[1]) == probepos:
             return int(line[7].split(';')[1].split('=')[1])
 

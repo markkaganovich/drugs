@@ -20,7 +20,8 @@ class Primer:
         self.ref = ref
         self.alt = alt
         lines = info.lineinfo()
-        cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
+        #cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
+        cells = lines.all
         self.chr = chr
         self.pos = pos    
         self.lpos = self.ligpos()
@@ -84,19 +85,29 @@ def printprobesandorderthem(probesfile, probesoutputfile):
     probeslist = simplejson.load(file)
     file.close()
     
+    CEUlines = info.lineinfo().individuals['CEU']
+    YRIlines = info.lineinfo().individuals['YRI']
+    CHBlines = info.lineinfo().individuals['CHBJPT']
+
+    print CEUlines
+
     cells = info.lineinfo().all
     file = open(probesoutputfile,'w')
     file.write('NAME'+','+ 'SEQUENCE' + '\n')
-    for pl in probeslist:
-            for i,p in enumerate(pl):
-                pr = Primer(p[0], p[1], cells.index(p[2]), p[3], p[4])
+    for ethnic in [CEUlines, YRIlines, CHBlines]:
+        file.write(str(ethnic)+'\n')
+        for pl in probeslist:
+            print pl[2]
+            if pl[2] in ethnic:
+                pr = Primer(pl[0], pl[1], cells.index(pl[2]), pl[3], pl[4])
                 print pr.seqlig
-                (file.write(pr.line + str(i) + ',' 
-                            + Bio.Seq.reverse_complement(pr.seqlig) + pr.backbone 
-                            + Bio.Seq.reverse_complement(pr.seqext) + '\n'))
+                (file.write(pr.line + '\t' 
+                    + str(Bio.Seq.reverse_complement(pr.seqlig)) + str(pr.backbone) 
+                    + str(Bio.Seq.reverse_complement(pr.seqext)) + '\n'))
 
     file.close()
-    
+   
+
 
 def getsnpregionseq(probe):
     return str(hg18['chr'+str(probe[1])][int(probe[2])-30 : int(probe[2])+28])
@@ -183,23 +194,28 @@ if __name__ == "__main__":
 #a = alleles(candidateloci, 2)
     a = candidateloci
     primersbeforeblastandtrio = runTests(a)
-    '''
-    file = open('./primersbeforeblastandtrio1026')
-    plist = simplejson.load(file)
-    file.close()
-    primersbeforeblastandtrio = []
-    for p in plist:
-        primersbeforeblastandtrio.append(Primer(p[0],p[1],cells.index(p[2]), p[3],p[4]))
-    '''
+    
+    #file = open('./primersbeforeblastandtrio1026')
+    #plist = simplejson.load(file)
+    #file.close()
+    #primersbeforeblastandtrio = []
+    #for p in plist:
+     #   primersbeforeblastandtrio.append(Primer(p[0],p[1],cells.index(p[2]), p[3],p[4]))
+    
     file  = open('../1000GenomesData/CEUtrioposint')
     CEUtriopos = simplejson.load(file)
     file.close()
     file = open('../1000GenomesData/YRItrioposint')
     YRItriopos = simplejson.load(file)
     file.close()
+    file = open('./snpsites')
+    snpsites = simplejson.load(file)
+    file.close()
+    snpsites['22'] = []
     primersbeforeblast = []
     for p in primersbeforeblastandtrio:
-        if not p.pos in CEUtriopos and not p.pos in YRItriopos:
+        posrange = range(p.pos-35, p.pos+33) 
+        if not p.pos in CEUtriopos and not p.pos in YRItriopos and len(filter(lambda x: x in snpsites[str(p.chr)], posrange)) <= 1:
             primersbeforeblast.append(p)
 
     padlockset = {}
@@ -213,8 +229,29 @@ if __name__ == "__main__":
     file = open('./padlockset','w')
     padlocklist = []
     for plist in padlockset:
-        padlocklist.extend(map(lambda x: [x.chr, x.pos, x.line], padlockset[plist]))
+        padlocklist.extend(map(lambda x: [x.chr, x.pos, x.line, x.ref, x.alt], padlockset[plist]))
     simplejson.dump(padlocklist, file)
     file.close()
+
+    #quick check for snps within padlock range
+    '''
+    file = open('./padlockset')
+    padlockset = simplejson.load(file)
+    file.close()
+    file = open('./snpsites')
+    snpsites = simplejson.load(file)
+    file.close()
+    
+    goodplist = []
+    for plist in padlockset:
+           chr = plist[0]
+           pos = int(plist[1])
+           posrange = range(pos-35, pos+33)
+           if len(filter(lambda x: x in snpsites[chr])) > 1:
+               print plist
+           else:
+               goodplist.append(plist)
+
+    '''
 
     printprobesandorderthem('./padlockset','./orderpadlockset102012')

@@ -1,12 +1,9 @@
 # ----------------------------------------------------------------------------------
-#
 # Mark Kaganovich,  Jan, 2011
 #
 # find SNPs that will identify 1000genome lines uniquely based on
 # the recently released SNP calls
-#
 # -----------------------------------------------------------------------------------
-
 import SNPhelpers
 import simplejson 
 import logging
