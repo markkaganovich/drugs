@@ -18,39 +18,44 @@ look for primers that are within 1 degree of optimal Tms
 '''
 
 class Primer:
-    def __init__(self, chr, pos, snpline, ref, alt):
-    	import info
-        self.ref = ref
-        self.alt = alt
-        lines = info.lineinfo()
-        cells = lines.individuals['CEU'] + lines.individuals['CHBJPT'] + lines.individuals['YRI']
+    def __init__(self, chr, lpos, rpos, tml = OPT_TEMP_L, tmr = OPT_TEMP_E, tempwiggle = 3):
         self.chr = chr
-        self.pos = pos    
-        self.lpos = self.ligpos()
-        self.epos = self.extpos()
-        self.seqlig = str(hg18['chr'+str(self.chr)][self.lpos[0]:self.lpos[1]]) 
-        self.seqext = str(hg18['chr'+str(self.chr)][self.epos[0]:self.epos[1]])
-        self.backbone = 'AGATCGGAAGAGCGTCGCATGTTATCGAGGTC'
-        self.line = cells[snpline]  
+        self.lpos = lpos    
+        self.rpos = rpos
+        self.tml = tml
+        self.tmr = tmr
+        self.tempwiggle = tempwiggle
+        self.downstream = [self.calcleftdownstream()[0], self.lpos]
+        self.upstream = [self.rpos, self.calcrightupstream()[0]]
+        self.downTM = self.calcleftdownstream()[1]
+        self.upTM = self.calcrightupstream()[1]
 
-    def ligpos(self):
-        return [self.pos-30, self.pos-5]
-    
-    def extpos(self):
-        return [self.pos+5,self.pos+28]
-
-    def checktemp(self):
-        if self.pos-28 <= 1:
-            return False
-        tmlig = MeltingTemp.Tm_staluc(self.seqlig)
-        tmext = MeltingTemp.Tm_staluc(self.seqext)
-
-        print tmlig, tmext
-
-        if abs(tmlig - OPT_TEMP_L) <=1 and abs(tmext - OPT_TEMP_E) <= 1:
-            return True
+    def checktemp(self, l, r, side):
+        seq = Seq.Seq(str(hg18['chr'+str(self.chr)][l:r]))
+        if side == "left":
+            seq = str(seq)
         else:
-            return False
+            seq = str(seq.reverse_complement())
+        tm = MeltingTemp.Tm_staluc(seq)
+        return tm
+
+    def calcleftdownstream(self):
+        tm = 0
+        i  = 1
+        while(tm < self.tml - self.tempwiggle):
+            tm = self.checktemp(self.lpos - i, self.lpos, 'left') 
+            i = i + 1
+
+        return [self.lpos - i, tm]
+
+    def calcrightupstream(self):
+        tm = 0
+        i  = 1
+        while(tm < self.tml - self.tempwiggle):
+            tm = self.checktemp(self.rpos, self.rpos + i, 'right')
+            i = i + 1
+
+        return [self.rpos + i, tm]
 
     def checkGCcontent(self):
         lenlig = float(len(self.seqlig))
@@ -67,12 +72,6 @@ class Primer:
             return True
         else:
             return False
-
-    def checkGA(self):
-        if (self.ref == 'G' and self.alt == 'A') or (self.ref == 'A' and self.alt == 'G'):
-            return False
-        else:
-            return True
 
 def printprobesandorderthem(probesfile, probesoutputfile):
     import os
@@ -184,7 +183,7 @@ if __name__ == "__main__":
     import info
     import os
     
-    file = open('./17.outputUniqueSNPs')
+    file = open('./outputUniqueSNPs')
 # file = open('./probes1')
     candidateloci = simplejson.load(file)
     file.close()
@@ -194,22 +193,14 @@ if __name__ == "__main__":
     a = candidateloci
 
     primersbeforeblast = runTests(a)
-  
-    file = open('./primersbeforeblast1007','w')
-    pbeforeblist = []
-    for p in primersbeforeblast:
-        pbeforeblist.append([p.chr, p.pos, p.line, p.ref, p.alt])
-    simplejson.dump(pbeforeblist, file)
-    file.close()
-
-
+   
     lines = info.lineinfo()
     cells = lines.all
     padlockset = {}
     for p in primersbeforeblast:
         if addtosetCheck(p, padlockset) and blast(p):
             if p.line in padlockset.keys():
-                padlockset[p.line].append(p)
+                padlockset[p.line] = padlockset[p.line].append(p)
             else:
                 padlockset[p.line] = [p]
 
